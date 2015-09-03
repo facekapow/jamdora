@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>Protected HTTP Streaming</title>
+    <meta charset="utf-8"/>
+  </head>
+  <link rel="stylesheet" href="/main.css"/>
+  <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.2/material.blue-light_blue.min.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+  <link rel="stylesheet" href="/sweetalert.css"/>
+  <script src="/sweetalert.min.js"></script>
+  <script src="https://storage.googleapis.com/code.getmdl.io/1.0.2/material.min.js"></script>
+  <script src="/util.js"></script>
+  <script src="/main.js"></script>
+  <body>
+    <div id="cont">
+      <div id="login">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          <input class="mdl-textfield__input" type="text" id="usernameField" />
+          <label class="mdl-textfield__label" for="usernameField">Username</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          <input class="mdl-textfield__input" type="password" id="passwordField" />
+          <label class="mdl-textfield__label" for="passwordField">Password</label>
+        </div>
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" id="loginButton">
+          Login
+        </button>
+      </div>
+      <div class="mdl-spinner mdl-js-spinner" id="loading"></div>
+      <br>
+      <div id="player" style="display: none;">
+        <audio autoplay id="musicElm"></audio>
+        <div id="player-cont">
+          <img id="playerImage"></img>
+          <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" id="pausePlay">
+            <i class="material-icons" id="pausePlayIcon">pause</i>
+          </button>
+          <div id="progress" class="mdl-progress mdl-js-progress"></div>
+          <span id="currentTime"></span>
+          <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored" id="skip">
+            <i class="material-icons">skip_next</i>
+          </button>
+          <span id="playerInfo"></span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

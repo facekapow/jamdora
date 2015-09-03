@@ -1,0 +1,35 @@
+{
+  "name": "jamdora",
+  "version": "0.0.1",
+  "description": "Your personal Pandora server!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No test\""
+  },
+  "keywords": [
+    "jamdora",
+    "pandora",
+    "music",
+    "streaming",
+    "server",
+    "audio"
+  ],
+  "author": "ArielAbreu",
+  "license": "MIT",
+  "dependencies": {
+    "base64-xor": "^0.10.0",
+    "body-parser": "^1.13.3",
+    "compression": "^1.5.2",
+    "cover-art": "^1.0.5",
+    "express": "^4.13.3",
+    "glob": "^5.0.14",
+    "ipware": "0.0.6",
+    "minimist": "^1.2.0",
+    "node-ffprobe": "^1.2.2",
+    "node-sigint": "0.0.1",
+    "rand-token": "^0.2.1"
+  },
+  "bin": {
+    "jamdora": "./jamdora.js"
+  }
+}

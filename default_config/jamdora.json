@@ -1,0 +1,11 @@
+{
+  "serverProtocol": "http",
+  "http": {
+    "port": 80
+  },
+  "https": {
+    "port": 443
+  },
+  "db": "return __home + '/.jamdora-users.json'",
+  "web": false
+}
