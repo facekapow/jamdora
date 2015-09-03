@@ -122,6 +122,6 @@ module.exports.command = Serve;
 module.exports.help = {
   title: 'serve',
   description: 'serve up jamdora through http or https!',
-  synopsis: 'jamdora serve [protocol] [-p port] -P playlist_file [-k https_key_file] [-c http_certificate_file]',
+  synopsis: 'jamdora serve [protocol] [-p port] -P playlist_file [-k https_key_file] [-c http_certificate_file] [-w]',
   sudo: 'only required if serving on a restricted port (like 80 or 443, etc)'
 };
