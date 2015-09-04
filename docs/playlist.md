@@ -8,6 +8,7 @@ Basic outline:
   ]
 }
 ```
+
 A playlist can be generated from a folder with the `jamdora generate` command:
 ```bash
 jamdora generate path_to_folder [output_filename]

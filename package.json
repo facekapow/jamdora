@@ -31,5 +31,9 @@
   },
   "bin": {
     "jamdora": "./jamdora.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArielAbreu/jamdora.git"
   }
 }

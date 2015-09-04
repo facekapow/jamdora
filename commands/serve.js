@@ -95,14 +95,39 @@ function Serve(args) {
 
 Serve.prototype.exec = function() {
   var self = this;
+
+  var plist = this._playlist;
+  if (!path.isAbsolute(plist)) {
+    plist = path.join(process.cwd(), this._playlist);
+  }
+
+  var dbpath = this._db;
+  if (!path.isAbsolute(dbpath)) {
+    dbpath = path.join(process.cwd(), this._db);
+  }
+
+  var key = this._key;
+  if (this._key) {
+    if (!path.isAbsolute(key)) {
+      key = path.join(process.cwd(), this._key);
+    }
+  }
+
+  var cert = this._cert;
+  if (this._cert) {
+    if (!path.isAbsolute(cert)) {
+      cert = path.join(process.cwd(), this._cert);
+    }
+  }
+
   jamdora.serve(this._method, {
-    playlist: path.resolve(this._playlist),
-    dbCont: fs.readFileSync(path.resolve(this._db)),
+    playlist: plist,
+    dbCont: fs.readFileSync(dbpath),
     ipInfo: this._ipInfo,
     log: this._log,
     port: this._port,
-    key: fs.readFileSync(path.resolve(this._key)),
-    cert: fs.readFileSync(path.resolve(this._cert)),
+    key: fs.readFileSync(key),
+    cert: fs.readFileSync(cert),
     webFrontEnd: this._web
   }, function(err, server) {
     if (err) {

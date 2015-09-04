@@ -30,3 +30,12 @@ jamdora serve https -P path_to_playlist -k key -c cert [-w]
 ```
 Replace `path_to_playlist` with the (full or relative) path to the playlist.
 For HTTPS, replace `key` with the path to your key file, and `cert` with the path to your certificate file.
+
+## Generating a Playlist
+A playlist can be generated from a folder with the `jamdora generate` command:
+```bash
+jamdora generate path_to_folder [output_filename]
+```
+Replace `path_to_folder` with the path to the folder containing the music you want to be in the playlist,
+and replace `output_filename` with the output filename you want.
+By default, the output filename is "playlist.json".
