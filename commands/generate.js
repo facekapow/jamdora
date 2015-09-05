@@ -27,7 +27,9 @@ Generate.prototype.exec = function() {
     }
     var files = fs.readdirSync(pathToFolder);
     for (var i = 0; i < files.length; i++) {
-      final_plist.songs.push(path.join(pathToFolder, files[i]));
+      if (files[i].substr(files[i].length - 4) === ('.mp3' || '.ogg' || '.m4a' || 'aiff' || '.aac' || '.oga' || '.wav' || '.wma' || 'webm')) {
+        final_plist.songs.push(path.join(pathToFolder, files[i]));
+      }
     }
     var writeFN = path.join(process.cwd(), 'playlist.json');
     if (this._fn) {
