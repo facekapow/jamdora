@@ -135,9 +135,6 @@ Serve.prototype.exec = function() {
       process.exit(1);
     }
     console.log(self._method + ' listening on :' + self._port + '...');
-    process.on('SIGINT', function() {
-      process.exit(0);
-    });
   });
 }
 

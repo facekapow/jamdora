@@ -23,7 +23,12 @@ try {
   fs.writeFileSync(userHome() + '/.jamdora-users.json', fs.readFileSync(__dirname + '/default_config/jamdora-users.json'));
 }
 
+// Windows CTRL-C interupt normalization
 require('node-sigint');
+
+process.on('SIGINT', function() {
+  process.exit(0);
+});
 
 if (args.length === 0) {
   console.log('need some arguments! try typing \"help\" as the first argument.');
