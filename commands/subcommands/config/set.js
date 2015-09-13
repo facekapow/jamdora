@@ -49,6 +49,7 @@ Config_Set.prototype.exec = function() {
     cfg[this._key] = "return " + this._value;
   }
   fs.writeFileSync(userHome() + '/.jamdora.json', JSON.stringify(cfg, null, '  '));
+  process.exit(0);
 }
 
 module.exports = {};

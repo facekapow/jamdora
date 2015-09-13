@@ -32,6 +32,7 @@ process.on('SIGINT', function() {
 
 if (args.length === 0) {
   console.log('need some arguments! try typing \"help\" as the first argument.');
+  process.exit(1);
 }
 
 var Subapp;

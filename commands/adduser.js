@@ -25,6 +25,7 @@ Adduser.prototype.exec = function() {
     password: this._args[1]
   });
   fs.writeFileSync(userHome() + '/.jamdora-users.json', JSON.stringify(users, null, '  '));
+  process.exit(0);
 }
 
 module.exports = {};

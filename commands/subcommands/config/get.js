@@ -31,6 +31,7 @@ Config_Set.prototype.exec = function() {
   } else {
     console.log(cfg[this._key]);
   }
+  process.exit(0);
 }
 
 module.exports = {};

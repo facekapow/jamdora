@@ -37,6 +37,7 @@ Help.prototype.exec = function() {
         }
         console.log('');
       }
+      process.exit(0);
     });
   });
 }

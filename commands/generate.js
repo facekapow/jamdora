@@ -44,6 +44,8 @@ Generate.prototype.exec = function() {
     console.log('error reading folder.');
     process.exit(1);
   }
+  
+  process.exit(0);
 }
 
 module.exports = {};
