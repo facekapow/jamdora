@@ -16,6 +16,10 @@ var JamdoraDB = require('./db');
 
 var exports = module.exports = {};
 
+function randNum(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function JamdoraServer(opt) {
   var isObject = typeof opt === 'object';
   if (isObject) {
@@ -40,6 +44,7 @@ function JamdoraServer(opt) {
   }
   this._expressApp.use(bp.json());
   var self = this;
+  this._usedIndexes = [];
   this._expressApp.post('/get-token', function(req, res) {
     self._db.findByUsername(req.body.username, function(err, user) {
       if (err) {
@@ -113,7 +118,30 @@ function JamdoraServer(opt) {
           res.append('Transfer-Encoding', 'chunked');
           res.append('Accept-Ranges', 'bytes');
           stream.pipe(res);
-          (self._playlistIndex === (self._playlist.songs.length - 1)) ? self._playlistIndex = 0 : self._playlistIndex++;
+          var i = null;
+          if (query.shuffle) {
+            if (self._usedIndexes.length === self._playlist.songs.length) {
+              self._usedIndexes = [];
+            };
+            var tmp = randNum(0, self._playlist.songs.length);
+            function randIt() {
+              for (var i = 0; i < self._usedIndexes.length; i++) {
+                if (self._usedIndexes[i] === tmp) {
+                  tmp = randNum(0, self._playlist.songs.length);
+                  randIt();
+                }
+              }
+            }
+            randIt();
+            self._playlistIndex = tmp;
+          } else {
+            if (self._playlistIndex === (self._playlist.songs.length - 1)) {
+              self._playlistIndex = 0;
+            } else {
+              self._playlistIndex++;
+            }
+          }
+          self._usedIndexes.push(self._playlistIndex);
         } else {
           if (isObject && !opt.log == false) {
             var time = new Date();
@@ -152,15 +180,26 @@ function JamdoraServer(opt) {
       info.file = null;
       info.streams = null;
 
-      coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
-        if (err) {
-          info.metadata.art_url = null;
-        } else {
-          info.metadata.art_url = url.format(artUrl);
-        }
+      if (!info.metadata.title) {
+        info.metadata.title = 'Unknown';
+      }
 
+      if (info.metadata.artist && info.metadata.album) {
+        coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
+          if (err) {
+            info.metadata.art_url = null;
+          } else {
+            info.metadata.art_url = url.format(artUrl);
+          }
+
+          res.send(JSON.stringify(info));
+        });
+      } else {
+        info.metadata.art_url = null;
+        info.metadata.artist = 'Unknown';
+        info.metadata.album = 'Unknown';
         res.send(JSON.stringify(info));
-      });
+      }
     });
   });
   this._expressApp.get('/playlist-info', function(req, res) {

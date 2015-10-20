@@ -111,7 +111,11 @@ window.addEventListener('DOMContentLoaded', function() {
               resize();
           });
 
-        music.src = '/stream?aT=' + window.aT + '&aAP=' + window.aAP + '&aP=' + window.aP;
+        var streamURL = '/stream?aT=' + window.aT + '&aAP=' + window.aAP + '&aP=' + window.aP;
+        if (document.get('#shuffle').checked) {
+          streamURL += '&shuffle';
+        }
+        music.src = streamURL;
         var is_first = true;
         function first() {
           if (is_first) {
