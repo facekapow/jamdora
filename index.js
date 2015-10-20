@@ -122,7 +122,7 @@ function JamdoraServer(opt) {
           if (self._usedIndexes.length === self._playlist.songs.length) {
             self._usedIndexes = [];
           };
-          if (query.shuffle) {
+          if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
             var tmp = randNum(0, self._playlist.songs.length);
             function randIt() {
               for (var i = 0; i < self._usedIndexes.length; i++) {

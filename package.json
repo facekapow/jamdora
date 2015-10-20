@@ -1,6 +1,6 @@
 {
   "name": "jamdora",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Your personal Pandora server!",
   "main": "index.js",
   "scripts": {
