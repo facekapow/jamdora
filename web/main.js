@@ -154,7 +154,11 @@ window.addEventListener('DOMContentLoaded', function() {
                   window.aT = obj.aT;
                   window.aAP = obj.aAP;
                   window.aP = obj.aP;
-                  music.src = '/stream?aT=' + window.aT + '&aAP=' + window.aAP + '&aP=' + window.aP;
+                  var streamURL = '/stream?aT=' + window.aT + '&aAP=' + window.aAP + '&aP=' + window.aP;
+                  if (document.get('#shuffle').hasClass('is-checked')) {
+                    streamURL += '&shuffle';
+                  }
+                  music.src = streamURL;
                   is_first = true;
                   music.addEventListener('playing', first);
                   music.play();
