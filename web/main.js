@@ -112,7 +112,7 @@ window.addEventListener('DOMContentLoaded', function() {
           });
 
         var streamURL = '/stream?aT=' + window.aT + '&aAP=' + window.aAP + '&aP=' + window.aP;
-        if (document.get('#shuffle').checked) {
+        if (document.get('#shuffle').hasClass('is-checked')) {
           streamURL += '&shuffle';
         }
         music.src = streamURL;

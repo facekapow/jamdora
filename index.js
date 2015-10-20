@@ -119,10 +119,10 @@ function JamdoraServer(opt) {
           res.append('Accept-Ranges', 'bytes');
           stream.pipe(res);
           var i = null;
+          if (self._usedIndexes.length === self._playlist.songs.length) {
+            self._usedIndexes = [];
+          };
           if (query.shuffle) {
-            if (self._usedIndexes.length === self._playlist.songs.length) {
-              self._usedIndexes = [];
-            };
             var tmp = randNum(0, self._playlist.songs.length);
             function randIt() {
               for (var i = 0; i < self._usedIndexes.length; i++) {
