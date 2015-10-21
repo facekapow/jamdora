@@ -36,6 +36,7 @@ function JamdoraServer(opt) {
   this._keys = [];
   this._sessionTokens = [];
   this._playlistIndex = 0;
+  this._trackInfo = null;
   if (isObject && !opt.ipInfo == false) {
     this._expressApp.use(function(req, res, next) {
       getIP(req);
@@ -118,30 +119,114 @@ function JamdoraServer(opt) {
           res.append('Transfer-Encoding', 'chunked');
           res.append('Accept-Ranges', 'bytes');
           stream.pipe(res);
-          var i = null;
-          if (self._usedIndexes.length === self._playlist.songs.length) {
-            self._usedIndexes = [];
-          };
-          if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
-            var tmp = randNum(0, self._playlist.songs.length);
-            function randIt() {
-              for (var i = 0; i < self._usedIndexes.length; i++) {
-                if (self._usedIndexes[i] === tmp) {
-                  tmp = randNum(0, self._playlist.songs.length);
-                  randIt();
+          probe(self._playlist.songs[index], function(err, info) {
+            if (err) {
+              if (isObject && !opt.log == false) {
+                var time = new Date();
+                console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/track-info\".');
+              }
+              self._trackInfo = null;
+              var i = null;
+              if (self._usedIndexes.length === self._playlist.songs.length) {
+                self._usedIndexes = [];
+              };
+              if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
+                var tmp = randNum(0, self._playlist.songs.length);
+                function randIt() {
+                  for (var i = 0; i < self._usedIndexes.length; i++) {
+                    if (self._usedIndexes[i] === tmp) {
+                      tmp = randNum(0, self._playlist.songs.length);
+                      randIt();
+                    }
+                  }
+                }
+                randIt();
+                self._playlistIndex = tmp;
+              } else {
+                if (self._playlistIndex === (self._playlist.songs.length - 1)) {
+                  self._playlistIndex = 0;
+                } else {
+                  self._playlistIndex++;
                 }
               }
+              return self._usedIndexes.push(self._playlistIndex);
             }
-            randIt();
-            self._playlistIndex = tmp;
-          } else {
-            if (self._playlistIndex === (self._playlist.songs.length - 1)) {
-              self._playlistIndex = 0;
+
+            // remove server (and server FS) information
+            info.filepath = null;
+            info.file = null;
+            info.streams = null;
+
+            if (!info.metadata.title) {
+              info.metadata.title = 'Unknown';
+            }
+
+            if (info.metadata.artist && info.metadata.album) {
+              coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
+                if (err) {
+                  info.metadata.art_url = null;
+                } else {
+                  info.metadata.art_url = url.format(artUrl);
+                }
+
+                self._trackInfo = info;
+                var i = null;
+                if (self._usedIndexes.length === self._playlist.songs.length) {
+                  self._usedIndexes = [];
+                };
+                if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
+                  var tmp = randNum(0, self._playlist.songs.length);
+                  function randIt() {
+                    for (var i = 0; i < self._usedIndexes.length; i++) {
+                      if (self._usedIndexes[i] === tmp) {
+                        tmp = randNum(0, self._playlist.songs.length);
+                        randIt();
+                      }
+                    }
+                  }
+                  randIt();
+                  self._playlistIndex = tmp;
+                } else {
+                  if (self._playlistIndex === (self._playlist.songs.length - 1)) {
+                    self._playlistIndex = 0;
+                  } else {
+                    self._playlistIndex++;
+                  }
+                }
+                self._usedIndexes.push(self._playlistIndex);
+              });
             } else {
-              self._playlistIndex++;
+              info.metadata.art_url = null;
+              info.metadata.artist = 'Unknown';
+              info.metadata.album = 'Unknown';
+              self._trackInfo = info;
+              var i = null;
+              if (self._usedIndexes.length === self._playlist.songs.length) {
+                self._usedIndexes = [];
+              };
+              if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
+                var tmp = randNum(0, self._playlist.songs.length);
+                function randIt() {
+                  for (var i = 0; i < self._usedIndexes.length; i++) {
+                    if (self._usedIndexes[i] === tmp) {
+                      tmp = randNum(0, self._playlist.songs.length);
+                      randIt();
+                    }
+                  }
+                }
+                randIt();
+                self._playlistIndex = tmp;
+              } else {
+                if (self._playlistIndex === (self._playlist.songs.length - 1)) {
+                  self._playlistIndex = 0;
+                } else {
+                  self._playlistIndex++;
+                }
+              }
+              self._usedIndexes.push(self._playlistIndex);
             }
-          }
-          self._usedIndexes.push(self._playlistIndex);
+          });
+
         } else {
           if (isObject && !opt.log == false) {
             var time = new Date();
@@ -165,47 +250,10 @@ function JamdoraServer(opt) {
     }
   });
   this._expressApp.get('/track-info', function(req, res) {
-    var index = 0;
-    if (self._usedIndexes.length === 1) {
-      index = 0;
-    } else {
-      index = self._usedIndexes[self._usedIndexes.length - 1];
+    if (self._trackInfo === null) {
+      res.status(500).send('500 internal server error.');
     }
-    probe(self._playlist.songs[index], function(err, info) {
-      if (err) {
-        if (isObject && !opt.log == false) {
-          var time = new Date();
-          console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/track-info\".');
-        }
-        return res.status(500).send('500 internal server error.');
-      }
-
-      // remove server (and server FS) information
-      info.filepath = null;
-      info.file = null;
-      info.streams = null;
-
-      if (!info.metadata.title) {
-        info.metadata.title = 'Unknown';
-      }
-
-      if (info.metadata.artist && info.metadata.album) {
-        coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
-          if (err) {
-            info.metadata.art_url = null;
-          } else {
-            info.metadata.art_url = url.format(artUrl);
-          }
-
-          res.send(JSON.stringify(info));
-        });
-      } else {
-        info.metadata.art_url = null;
-        info.metadata.artist = 'Unknown';
-        info.metadata.album = 'Unknown';
-        res.send(JSON.stringify(info));
-      }
-    });
+    res.send(JSON.stringify(self._trackInfo));
   });
   this._expressApp.get('/playlist-info', function(req, res) {
     var ji = 0;
