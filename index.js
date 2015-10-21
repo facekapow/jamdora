@@ -31,6 +31,7 @@ function JamdoraServer(opt) {
     if (opt.dbCont) this._db = new JamdoraDB(opt.dbCont, 'data');
     if (opt.dbPath) this._db = new JamdoraDB(opt.dbPath, 'path');
   }
+  var self = this;
   this._expressApp = express();
   if (isObject && !opt.compress == false) this._expressApp.use(compression());
   this._keys = [];
@@ -386,7 +387,7 @@ function JamdoraServer(opt) {
       this._expressApp.use(express.static(__dirname + '/web'));
     }
   }
-  probe(self._playlist.songs[self._playlistIndex], function(err, info) {
+  probe(this._playlist.songs[self._playlistIndex], function(err, info) {
     if (err) {
       self._trackInfo = null;
       return execStuff.apply(self);
