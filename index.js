@@ -165,7 +165,13 @@ function JamdoraServer(opt) {
     }
   });
   this._expressApp.get('/track-info', function(req, res) {
-    probe(self._playlist.songs[self._playlistIndex], function(err, info) {
+    var index = 0;
+    if (self._usedIndexes.length === 1) {
+      index = 0;
+    } else {
+      index = self._usedIndexes[self._usedIndexes.length - 1];
+    }
+    probe(self._playlist.songs[index], function(err, info) {
       if (err) {
         if (isObject && !opt.log == false) {
           var time = new Date();
