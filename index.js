@@ -37,134 +37,165 @@ function JamdoraServer(opt) {
   this._sessionTokens = [];
   this._playlistIndex = 0;
   this._trackInfo = null;
-  if (isObject && !opt.ipInfo == false) {
-    this._expressApp.use(function(req, res, next) {
-      getIP(req);
-      next();
-    });
-  }
-  this._expressApp.use(bp.json());
-  var self = this;
-  this._usedIndexes = [];
-  this._expressApp.post('/get-token', function(req, res) {
-    self._db.findByUsername(req.body.username, function(err, user) {
-      if (err) {
-        if (isObject && !opt.log == false) {
-          var time = new Date();
-          console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/get-token\".');
-        }
-        return res.status(500).send('500 internal server error.');
-      }
-      if (!user) {
-        if (isObject && !opt.log == false) {
-          var time = new Date();
-          var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-          if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-          str += ' @ \"/get-token\".';
-          console.log(str);
-        }
-        return res.status(403).send('403 forbidden.');
-      }
-      if (user.password !== req.body.password) {
-        if (isObject && !opt.log == false) {
-          var time = new Date();
-          var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-          if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-          str += ' @ \"/get-token\".';
-          console.log(str);
-        }
-        return res.status(403).send('403 forbidden.');
-      }
-      var token = rand.generate(24).toString();
-      self._sessionTokens.push({
-        removed: false,
-        hasBeenRegened: false,
-        token: token,
-        ip: req.clientIp
+  function execStuff() {
+    if (isObject && !opt.ipInfo == false) {
+      this._expressApp.use(function(req, res, next) {
+        getIP(req);
+        next();
       });
-      var tokPos = self._sessionTokens.length - 1;
-      var key = rand.generate(12).toString();
-      self._keys.push({
-        removed: false,
-        hasBeenRegened: false,
-        key: key,
-        ip: req.clientIp
-      });
-      var keyPos = self._keys.length - 1;
-      var xor_token = xor.encode(key, token);
-      res.status(200).send(JSON.stringify({
-        aT: encodeURIComponent(xor_token),
-        aAP:  encodeURIComponent(tokPos.toString()),
-        aP: encodeURIComponent(keyPos.toString())
-      }));
-    });
-  });
-  this._expressApp.get('/stream', function(req, res) {
-    var query = url.parse(req.url, true).query;
-    if (self._keys[parseInt(decodeURIComponent(query.aP))] && self._sessionTokens[parseInt(decodeURIComponent(query.aAP))]) {
-      if (self._keys[parseInt(decodeURIComponent(query.aP))].removed || self._sessionTokens[parseInt(decodeURIComponent(query.aAP))].removed) {
-        if (isObject && !opt.log == false) {
-          var time = new Date();
-          var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-          if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-          str += ' @ \"/stream\".';
-          console.log(str);
+    }
+    this._expressApp.use(bp.json());
+    var self = this;
+    this._usedIndexes = [];
+    this._expressApp.post('/get-token', function(req, res) {
+      self._db.findByUsername(req.body.username, function(err, user) {
+        if (err) {
+          if (isObject && !opt.log == false) {
+            var time = new Date();
+            console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/get-token\".');
+          }
+          return res.status(500).send('500 internal server error.');
         }
-        res.status(403).send('403 forbidden.');
-      } else {
-        var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(query.aP))].key, decodeURIComponent(query.aT));
-        if (self._sessionTokens[parseInt(decodeURIComponent(query.aAP))].token === decreypted_token) {
-          var stream = fs.createReadStream(self._playlist.songs[self._playlistIndex]);
-          res.append('Content-Type', 'audio/mpeg');
-          res.append('Transfer-Encoding', 'chunked');
-          res.append('Accept-Ranges', 'bytes');
-          stream.pipe(res);
-          probe(self._playlist.songs[self._playlistIndex], function(err, info) {
-            if (err) {
-              self._trackInfo = null;
-              var i = null;
-              if (self._usedIndexes.length === self._playlist.songs.length) {
-                self._usedIndexes = [];
-              };
-              if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
-                var tmp = randNum(0, self._playlist.songs.length);
-                function randIt() {
-                  for (var i = 0; i < self._usedIndexes.length; i++) {
-                    if (self._usedIndexes[i] === tmp) {
-                      tmp = randNum(0, self._playlist.songs.length);
-                      randIt();
+        if (!user) {
+          if (isObject && !opt.log == false) {
+            var time = new Date();
+            var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+            if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+            str += ' @ \"/get-token\".';
+            console.log(str);
+          }
+          return res.status(403).send('403 forbidden.');
+        }
+        if (user.password !== req.body.password) {
+          if (isObject && !opt.log == false) {
+            var time = new Date();
+            var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+            if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+            str += ' @ \"/get-token\".';
+            console.log(str);
+          }
+          return res.status(403).send('403 forbidden.');
+        }
+        var token = rand.generate(24).toString();
+        self._sessionTokens.push({
+          removed: false,
+          hasBeenRegened: false,
+          token: token,
+          ip: req.clientIp
+        });
+        var tokPos = self._sessionTokens.length - 1;
+        var key = rand.generate(12).toString();
+        self._keys.push({
+          removed: false,
+          hasBeenRegened: false,
+          key: key,
+          ip: req.clientIp
+        });
+        var keyPos = self._keys.length - 1;
+        var xor_token = xor.encode(key, token);
+        res.status(200).send(JSON.stringify({
+          aT: encodeURIComponent(xor_token),
+          aAP:  encodeURIComponent(tokPos.toString()),
+          aP: encodeURIComponent(keyPos.toString())
+        }));
+      });
+    });
+    this._expressApp.get('/stream', function(req, res) {
+      var query = url.parse(req.url, true).query;
+      if (self._keys[parseInt(decodeURIComponent(query.aP))] && self._sessionTokens[parseInt(decodeURIComponent(query.aAP))]) {
+        if (self._keys[parseInt(decodeURIComponent(query.aP))].removed || self._sessionTokens[parseInt(decodeURIComponent(query.aAP))].removed) {
+          if (isObject && !opt.log == false) {
+            var time = new Date();
+            var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+            if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+            str += ' @ \"/stream\".';
+            console.log(str);
+          }
+          res.status(403).send('403 forbidden.');
+        } else {
+          var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(query.aP))].key, decodeURIComponent(query.aT));
+          if (self._sessionTokens[parseInt(decodeURIComponent(query.aAP))].token === decreypted_token) {
+            var stream = fs.createReadStream(self._playlist.songs[self._playlistIndex]);
+            res.append('Content-Type', 'audio/mpeg');
+            res.append('Transfer-Encoding', 'chunked');
+            res.append('Accept-Ranges', 'bytes');
+            stream.pipe(res);
+            probe(self._playlist.songs[self._playlistIndex], function(err, info) {
+              if (err) {
+                self._trackInfo = null;
+                var i = null;
+                if (self._usedIndexes.length === self._playlist.songs.length) {
+                  self._usedIndexes = [];
+                };
+                if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
+                  var tmp = randNum(0, self._playlist.songs.length);
+                  function randIt() {
+                    for (var i = 0; i < self._usedIndexes.length; i++) {
+                      if (self._usedIndexes[i] === tmp) {
+                        tmp = randNum(0, self._playlist.songs.length);
+                        randIt();
+                      }
                     }
                   }
-                }
-                randIt();
-                self._playlistIndex = tmp;
-              } else {
-                if (self._playlistIndex === (self._playlist.songs.length - 1)) {
-                  self._playlistIndex = 0;
+                  randIt();
+                  self._playlistIndex = tmp;
                 } else {
-                  self._playlistIndex++;
+                  if (self._playlistIndex === (self._playlist.songs.length - 1)) {
+                    self._playlistIndex = 0;
+                  } else {
+                    self._playlistIndex++;
+                  }
                 }
+                return self._usedIndexes.push(self._playlistIndex);
               }
-              return self._usedIndexes.push(self._playlistIndex);
-            }
 
-            // remove server (and server FS) information
-            info.filepath = null;
-            info.file = null;
-            info.streams = null;
+              // remove server (and server FS) information
+              info.filepath = null;
+              info.file = null;
+              info.streams = null;
 
-            if (!info.metadata.title) {
-              info.metadata.title = 'Unknown';
-            }
+              if (!info.metadata.title) {
+                info.metadata.title = 'Unknown';
+              }
 
-            if (info.metadata.artist && info.metadata.album) {
-              coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
-                if (err) {
-                  info.metadata.art_url = null;
-                } else {
-                  info.metadata.art_url = url.format(artUrl);
-                }
+              if (info.metadata.artist && info.metadata.album) {
+                coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
+                  if (err) {
+                    info.metadata.art_url = null;
+                  } else {
+                    info.metadata.art_url = url.format(artUrl);
+                  }
 
+                  self._trackInfo = info;
+                  var i = null;
+                  if (self._usedIndexes.length === self._playlist.songs.length) {
+                    self._usedIndexes = [];
+                  };
+                  if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
+                    var tmp = randNum(0, self._playlist.songs.length);
+                    function randIt() {
+                      for (var i = 0; i < self._usedIndexes.length; i++) {
+                        if (self._usedIndexes[i] === tmp) {
+                          tmp = randNum(0, self._playlist.songs.length);
+                          randIt();
+                        }
+                      }
+                    }
+                    randIt();
+                    self._playlistIndex = tmp;
+                  } else {
+                    if (self._playlistIndex === (self._playlist.songs.length - 1)) {
+                      self._playlistIndex = 0;
+                    } else {
+                      self._playlistIndex++;
+                    }
+                  }
+                  self._usedIndexes.push(self._playlistIndex);
+                });
+              } else {
+                info.metadata.art_url = null;
+                info.metadata.artist = 'Unknown';
+                info.metadata.album = 'Unknown';
                 self._trackInfo = info;
                 var i = null;
                 if (self._usedIndexes.length === self._playlist.songs.length) {
@@ -190,176 +221,101 @@ function JamdoraServer(opt) {
                   }
                 }
                 self._usedIndexes.push(self._playlistIndex);
-              });
-            } else {
-              info.metadata.art_url = null;
-              info.metadata.artist = 'Unknown';
-              info.metadata.album = 'Unknown';
-              self._trackInfo = info;
-              var i = null;
-              if (self._usedIndexes.length === self._playlist.songs.length) {
-                self._usedIndexes = [];
-              };
-              if (typeof query.shuffle !== 'undefined' && query.shuffle !== null) {
-                var tmp = randNum(0, self._playlist.songs.length);
-                function randIt() {
-                  for (var i = 0; i < self._usedIndexes.length; i++) {
-                    if (self._usedIndexes[i] === tmp) {
-                      tmp = randNum(0, self._playlist.songs.length);
-                      randIt();
-                    }
-                  }
-                }
-                randIt();
-                self._playlistIndex = tmp;
-              } else {
-                if (self._playlistIndex === (self._playlist.songs.length - 1)) {
-                  self._playlistIndex = 0;
-                } else {
-                  self._playlistIndex++;
-                }
               }
-              self._usedIndexes.push(self._playlistIndex);
+            });
+
+          } else {
+            if (isObject && !opt.log == false) {
+              var time = new Date();
+              var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+              if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+              str += ' @ \"/stream\".';
+              console.log(str);
             }
-          });
-
-        } else {
-          if (isObject && !opt.log == false) {
-            var time = new Date();
-            var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-            if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-            str += ' @ \"/stream\".';
-            console.log(str);
+            res.status(403).send('403 forbidden.');
           }
-          res.status(403).send('403 forbidden.');
         }
-      }
-    } else {
-      if (isObject && !opt.log == false) {
-        var time = new Date();
-        var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-        if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-        str += ' @ \"/stream\".';
-        console.log(str);
-      }
-      res.status(403).send('403 forbidden.');
-    }
-  });
-  this._expressApp.get('/track-info', function(req, res) {
-    if (self._trackInfo === null) {
-      res.status(500).send('500 internal server error.');
-    }
-    res.send(JSON.stringify(self._trackInfo));
-  });
-  this._expressApp.get('/playlist-info', function(req, res) {
-    var ji = 0;
-    var inf = {
-      info: []
-    };
-    function probePlist() {
-      probe(self._playlist.songs[ji], function(err, info) {
-        if (err) {
-          if (isObject && !opt.log == false) {
-            var time = new Date();
-            console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/playlist-info\".');
-          }
-          return res.status(500).send('500 internal server error.');
-        }
-
-        // remove server (and server FS) information
-        info.filepath = null;
-        info.file = null;
-        info.streams = null;
-
-        inf.info.push(info);
-
-        if (ji === (self._playlist.songs.length - 1)) {
-          res.send(JSON.stringify(inf));
-        } else {
-          probePlist();
-        }
-      });
-    }
-  });
-  this._expressApp.post('/remove-token', function(req, res) {
-    if (self._keys[parseInt(decodeURIComponent(req.body.aP))] && self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))]) {
-      if (self._keys[parseInt(decodeURIComponent(req.body.aP))].removed || self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].removed) {
       } else {
-        var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(req.body.aP))].key, decodeURIComponent(req.body.aT));
-        if (self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].token === decreypted_token) {
-          self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].removed = true;
-          self._keys[parseInt(decodeURIComponent(req.body.aP))].removed = true;
-          res.status(200).send('200 ok.');
-        } else {
-          if (isObject && !opt.log == false) {
-            var time = new Date();
-            var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-            if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-            str += ' @ \"/remove-token\".';
-            console.log(str);
-          }
-          res.status(403).send('403 forbidden.');
-        }
-      }
-    } else {
-      if (isObject && !opt.log == false) {
-        var time = new Date();
-        var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-        if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-        str += ' @ \"/remove-token\".';
-        console.log(str);
-      }
-      res.status(403).send('403 forbidden.');
-    }
-  });
-  this._expressApp.post('/re-gen', function(req, res) {
-    if (self._keys[parseInt(decodeURIComponent(req.body.aP))] && self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))]) {
-      if (!self._keys[parseInt(decodeURIComponent(req.body.aP))].removed || !self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].removed) {
         if (isObject && !opt.log == false) {
           var time = new Date();
           var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
           if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-          str += ' @ \"/re-gen\".';
+          str += ' @ \"/stream\".';
           console.log(str);
         }
         res.status(403).send('403 forbidden.');
-      } else if (self._keys[parseInt(decodeURIComponent(req.body.aP))].hasBeenRegened || self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].hasBeenRegened) {
+      }
+    });
+    this._expressApp.get('/track-info', function(req, res) {
+      if (self._trackInfo === null) {
+        res.status(500).send('500 internal server error.');
+      }
+      res.send(JSON.stringify(self._trackInfo));
+    });
+    this._expressApp.get('/playlist-info', function(req, res) {
+      var ji = 0;
+      var inf = {
+        info: []
+      };
+      function probePlist() {
+        probe(self._playlist.songs[ji], function(err, info) {
+          if (err) {
+            if (isObject && !opt.log == false) {
+              var time = new Date();
+              console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/playlist-info\".');
+            }
+            return res.status(500).send('500 internal server error.');
+          }
+
+          // remove server (and server FS) information
+          info.filepath = null;
+          info.file = null;
+          info.streams = null;
+
+          inf.info.push(info);
+
+          if (ji === (self._playlist.songs.length - 1)) {
+            res.send(JSON.stringify(inf));
+          } else {
+            probePlist();
+          }
+        });
+      }
+    });
+    this._expressApp.post('/remove-token', function(req, res) {
+      if (self._keys[parseInt(decodeURIComponent(req.body.aP))] && self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))]) {
+        if (self._keys[parseInt(decodeURIComponent(req.body.aP))].removed || self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].removed) {
+        } else {
+          var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(req.body.aP))].key, decodeURIComponent(req.body.aT));
+          if (self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].token === decreypted_token) {
+            self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].removed = true;
+            self._keys[parseInt(decodeURIComponent(req.body.aP))].removed = true;
+            res.status(200).send('200 ok.');
+          } else {
+            if (isObject && !opt.log == false) {
+              var time = new Date();
+              var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+              if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+              str += ' @ \"/remove-token\".';
+              console.log(str);
+            }
+            res.status(403).send('403 forbidden.');
+          }
+        }
+      } else {
         if (isObject && !opt.log == false) {
           var time = new Date();
           var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
           if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-          str += ' @ \"/re-gen\".';
+          str += ' @ \"/remove-token\".';
           console.log(str);
         }
         res.status(403).send('403 forbidden.');
-      } else {
-        var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(req.body.aP))].key, decodeURIComponent(req.body.aT));
-        if (self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].token === decreypted_token) {
-          self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].hasBeenRegened = true;
-          self._keys[parseInt(decodeURIComponent(req.body.aP))].hasBeenRegened = true;
-          var token = rand.generate(24).toString();
-          self._sessionTokens.push({
-            removed: false,
-            hasBeenRegened: false,
-            token: token,
-            ip: req.clientIp
-          });
-          var tokPos = self._sessionTokens.length - 1;
-          var key = rand.generate(12).toString();
-          self._keys.push({
-            removed: false,
-            hasBeenRegened: false,
-            key: key,
-            ip: req.clientIp
-          });
-          var keyPos = self._keys.length - 1;
-          var xor_token = xor.encode(key, token);
-          res.json({
-            aT: encodeURIComponent(xor_token),
-            aAP: encodeURIComponent(tokPos.toString()),
-            aP: encodeURIComponent(keyPos.toString())
-          });
-        } else {
+      }
+    });
+    this._expressApp.post('/re-gen', function(req, res) {
+      if (self._keys[parseInt(decodeURIComponent(req.body.aP))] && self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))]) {
+        if (!self._keys[parseInt(decodeURIComponent(req.body.aP))].removed || !self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].removed) {
           if (isObject && !opt.log == false) {
             var time = new Date();
             var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
@@ -368,22 +324,102 @@ function JamdoraServer(opt) {
             console.log(str);
           }
           res.status(403).send('403 forbidden.');
+        } else if (self._keys[parseInt(decodeURIComponent(req.body.aP))].hasBeenRegened || self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].hasBeenRegened) {
+          if (isObject && !opt.log == false) {
+            var time = new Date();
+            var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+            if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+            str += ' @ \"/re-gen\".';
+            console.log(str);
+          }
+          res.status(403).send('403 forbidden.');
+        } else {
+          var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(req.body.aP))].key, decodeURIComponent(req.body.aT));
+          if (self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].token === decreypted_token) {
+            self._sessionTokens[parseInt(decodeURIComponent(req.body.aAP))].hasBeenRegened = true;
+            self._keys[parseInt(decodeURIComponent(req.body.aP))].hasBeenRegened = true;
+            var token = rand.generate(24).toString();
+            self._sessionTokens.push({
+              removed: false,
+              hasBeenRegened: false,
+              token: token,
+              ip: req.clientIp
+            });
+            var tokPos = self._sessionTokens.length - 1;
+            var key = rand.generate(12).toString();
+            self._keys.push({
+              removed: false,
+              hasBeenRegened: false,
+              key: key,
+              ip: req.clientIp
+            });
+            var keyPos = self._keys.length - 1;
+            var xor_token = xor.encode(key, token);
+            res.json({
+              aT: encodeURIComponent(xor_token),
+              aAP: encodeURIComponent(tokPos.toString()),
+              aP: encodeURIComponent(keyPos.toString())
+            });
+          } else {
+            if (isObject && !opt.log == false) {
+              var time = new Date();
+              var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+              if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+              str += ' @ \"/re-gen\".';
+              console.log(str);
+            }
+            res.status(403).send('403 forbidden.');
+          }
         }
+      } else {
+        if (isObject && !opt.log == false) {
+          var time = new Date();
+          var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
+          if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
+          str += ' @ \"/re-gen\".';
+          console.log(str);
+        }
+        res.status(403).send('403 forbidden.');
       }
+    });
+    if (opt.webFrontEnd && opt.webFrontEnd === true) {
+      this._expressApp.use(express.static(__dirname + '/web'));
+    }
+  }
+  probe(self._playlist.songs[self._playlistIndex], function(err, info) {
+    if (err) {
+      self._trackInfo = null;
+      return execStuff.apply(self);
+    }
+
+    // remove server (and server FS) information
+    info.filepath = null;
+    info.file = null;
+    info.streams = null;
+
+    if (!info.metadata.title) {
+      info.metadata.title = 'Unknown';
+    }
+
+    if (info.metadata.artist && info.metadata.album) {
+      coverArt(info.metadata.artist, info.metadata.album, 'extralarge', function(err, artUrl) {
+        if (err) {
+          info.metadata.art_url = null;
+        } else {
+          info.metadata.art_url = url.format(artUrl);
+        }
+
+        self._trackInfo = info;
+        execStuff.apply(self);
+      });
     } else {
-      if (isObject && !opt.log == false) {
-        var time = new Date();
-        var str = time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 403 forbidden';
-        if (!opt.ipInfo == false) ' w/ IP ' + req.clientIp;
-        str += ' @ \"/re-gen\".';
-        console.log(str);
-      }
-      res.status(403).send('403 forbidden.');
+      info.metadata.art_url = null;
+      info.metadata.artist = 'Unknown';
+      info.metadata.album = 'Unknown';
+      self._trackInfo = info;
+      execStuff.apply(self);
     }
   });
-  if (opt.webFrontEnd && opt.webFrontEnd === true) {
-    this._expressApp.use(express.static(__dirname + '/web'));
-  }
 }
 
 exports.JamdoraUnsecureServer = function(opt) {
