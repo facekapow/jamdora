@@ -119,12 +119,8 @@ function JamdoraServer(opt) {
           res.append('Transfer-Encoding', 'chunked');
           res.append('Accept-Ranges', 'bytes');
           stream.pipe(res);
-          probe(self._playlist.songs[index], function(err, info) {
+          probe(self._playlist.songs[self._playlistIndex], function(err, info) {
             if (err) {
-              if (isObject && !opt.log == false) {
-                var time = new Date();
-                console.log(time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds() + ' 500 internal server error @ \"/track-info\".');
-              }
               self._trackInfo = null;
               var i = null;
               if (self._usedIndexes.length === self._playlist.songs.length) {
