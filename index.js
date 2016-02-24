@@ -116,7 +116,7 @@ function JamdoraServer(opt) {
         } else {
           var decreypted_token = xor.decode(self._keys[parseInt(decodeURIComponent(query.aP))].key, decodeURIComponent(query.aT));
           if (self._sessionTokens[parseInt(decodeURIComponent(query.aAP))].token === decreypted_token) {
-            var stream = fs.createReadStream(self._playlist.songs[self._playlistIndex]);
+            var stream = fs.createReadStream(self._playlist.songs[self._playlistIndex] || self._playlist.songs[0]);
             res.append('Content-Type', 'audio/mpeg');
             res.append('Transfer-Encoding', 'chunked');
             res.append('Accept-Ranges', 'bytes');

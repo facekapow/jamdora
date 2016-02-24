@@ -126,8 +126,8 @@ Serve.prototype.exec = function() {
     ipInfo: this._ipInfo,
     log: this._log,
     port: this._port,
-    key: fs.readFileSync(key),
-    cert: fs.readFileSync(cert),
+    key: (key) ? fs.readFileSync(key) : '',
+    cert: (cert) ? fs.readFileSync(cert) : '',
     webFrontEnd: this._web
   }, function(err, server) {
     if (err) {

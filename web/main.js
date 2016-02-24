@@ -132,7 +132,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 pinfo.text(music.info.metadata.artist + ' - ' + music.info.metadata.title);
               }
             });
-            music.removeEventListener(first);
+            music.removeEventListener('playing', first);
             is_first = false;
           }
         }
