@@ -119,19 +119,22 @@ window.addEventListener('DOMContentLoaded', function() {
         var is_first = true;
         function first() {
           if (is_first) {
-            fetchInfo(function(data) {
-              if (loading.hasClass('is-active')) loading.removeClass('is-active');
-              player.css('display', 'inline-block');
-              music.info = data;
-              if (music.info.metadata.art_url) {
-                pimg.css('display', 'block');
-                pimg.src = music.info.metadata.art_url;
-              }
-              if (music.info.metadata.artist && music.info.metadata.title) {
-                pinfo.css('display', 'block');
-                pinfo.text(music.info.metadata.artist + ' - ' + music.info.metadata.title);
-              }
-            });
+            // wait for the info to update:
+            setTimeout(function() {
+              fetchInfo(function(data) {
+                if (loading.hasClass('is-active')) loading.removeClass('is-active');
+                player.css('display', 'inline-block');
+                music.info = data;
+                if (music.info.metadata.art_url) {
+                  pimg.css('display', 'block');
+                  pimg.src = music.info.metadata.art_url;
+                }
+                if (music.info.metadata.artist && music.info.metadata.title) {
+                  pinfo.css('display', 'block');
+                  pinfo.text(music.info.metadata.artist + ' - ' + music.info.metadata.title);
+                }
+              });
+            }, 1000);
             music.removeEventListener('playing', first);
             is_first = false;
           }
