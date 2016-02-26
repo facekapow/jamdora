@@ -10,11 +10,16 @@ function Generate(args) {
     process.exit(1);
   }
   if (this._args[1]) {
-    this._fn = this._args[1];
+    if (this._args[1] === '-r' || this._args[1] === '--recurse') {
+      this._recurse = true;
+    } else {
+      this._fn = this._args[1];
+    }
   }
 }
 
 Generate.prototype.exec = function() {
+  var self = this;
   try {
     var pathToFolder;
     var final_plist = {
@@ -25,12 +30,17 @@ Generate.prototype.exec = function() {
     } else {
       pathToFolder = path.join(process.cwd(), this._args[0]);
     }
-    var files = fs.readdirSync(pathToFolder);
-    for (var i = 0; i < files.length; i++) {
-      if (files[i].substr(files[i].length - 4) === ('.mp3' || '.ogg' || '.m4a' || 'aiff' || '.aac' || '.oga' || '.wav' || '.wma' || 'webm')) {
-        final_plist.songs.push(path.join(pathToFolder, files[i]));
+    function loopOver(folder) {
+      var files = fs.readdirSync(folder);
+      for (var i = 0; i < files.length; i++) {
+        if (fs.statSync(path.join(folder, files[i])).isDirectory() && self._recurse) {
+          loopOver(path.join(folder, files[i]));
+        } else if (files[i].substr(files[i].length - 4) === ('.mp3' || '.ogg' || '.m4a' || 'aiff' || '.aac' || '.oga' || '.wav' || '.wma' || '.webm')) {
+          final_plist.songs.push(path.join(folder, files[i]));
+        }
       }
     }
+    loopOver(pathToFolder);
     var writeFN = path.join(process.cwd(), 'playlist.json');
     if (this._fn) {
       if (path.isAbsolute(this._fn)) {
@@ -53,6 +63,6 @@ module.exports.command = Generate;
 module.exports.help = {
   title: 'generate',
   description: 'generate a playlist file from the files in the specified directory!',
-  synopsis: 'jamdora generate path_to_folder [output_filename]',
+  synopsis: 'jamdora generate path_to_folder [output_filename] [-r|--recurse]',
   sudo: 'only required if trying to read a restricted folder or write to a restricted path'
 };
