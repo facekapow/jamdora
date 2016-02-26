@@ -108,7 +108,6 @@ window.addEventListener('DOMContentLoaded', function() {
 
               prog.MaterialProgress.setProgress(current);
               progTime.innerHTML = curtime + '/' + totaltime;
-              resize();
           });
 
         var streamURL = '/stream?aT=' + window.aT + '&aAP=' + window.aAP + '&aP=' + window.aP;
@@ -119,6 +118,7 @@ window.addEventListener('DOMContentLoaded', function() {
         var is_first = true;
         function first() {
           if (is_first) {
+            resize();
             // wait for the info to update:
             setTimeout(function() {
               fetchInfo(function(data) {
@@ -133,6 +133,7 @@ window.addEventListener('DOMContentLoaded', function() {
                   pinfo.css('display', 'block');
                   pinfo.text(music.info.metadata.artist + ' - ' + music.info.metadata.title);
                 }
+                resize();
               });
             }, 1000);
             music.removeEventListener('playing', first);
