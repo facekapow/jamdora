@@ -133,7 +133,7 @@ window.addEventListener('DOMContentLoaded', function() {
                   pinfo.css('display', 'block');
                   pinfo.text(music.info.metadata.artist + ' - ' + music.info.metadata.title);
                 }
-                resize();
+                setTimeout(resize, 600);
               });
             }, 1000);
             music.removeEventListener('playing', first);
